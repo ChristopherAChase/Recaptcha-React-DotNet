@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
+using System;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace RecaptchaValidation.Controllers
 {
@@ -19,22 +21,20 @@ namespace RecaptchaValidation.Controllers
             _recaptcha = recaptcha;
         }
 
-        [HttpPost("Verify")]
-        public async Task<IActionResult> Verify([FromQuery] string RecaptchaToken)
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify([FromQuery] string recaptchaToken)
         {
-            IRecaptchaRequestMessage request = new RecaptchaRequestMessage(RecaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config);
+            var request = new RecaptchaRequestMessage(recaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config.Value.Keys.Secret, _config.Value.VerifyUrl);
 
-            _recaptcha.InitializeRequest(request);
+            RecaptchaResponseMessage response = await _recaptcha.ExecuteAsync(request);
 
-            IRecaptchaResponseMessage response = await _recaptcha.Execute();
-
-            if(!response.success)
+            if(!response.Success)
             {
-                Console.WriteLine(_recaptcha.Response);
-                return Ok(_recaptcha.Response);
+                Console.WriteLine(response);
+                return Ok(response);
             }
             
-            return Ok($"Controller received token! { JsonSerializer.Serialize(_recaptcha.Response)}");
+            return Ok($"Controller received token! { JsonSerializer.Serialize(response)}");
         }
 
     }

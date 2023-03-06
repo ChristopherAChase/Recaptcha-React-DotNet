@@ -1,43 +1,34 @@
-﻿using Microsoft.Extensions.Options;
-using RecaptchaValidation.Interfaces;
+﻿using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
+using System;
+using System.IO;
+using System.Net.Http;
 using System.Runtime.Serialization.Json;
+using System.Threading.Tasks;
 
 namespace RecaptchaValidation.Services
 {
     public class RecaptchaService : IRecaptchaService
     {
         public HttpClient _httpClient { get; set; }
-        public IRecaptchaRequestMessage Request {get; set; }
-        public IRecaptchaResponseMessage Response { get; set; }
 
-        public RecaptchaService(HttpClient httpClient, IOptions<RecaptchaOptions> recaptchaOptions) {
+        public RecaptchaService(HttpClient httpClient) {
             _httpClient= httpClient;
         }
 
-        public void InitializeRequest(IRecaptchaRequestMessage request)
-        {
-            Request = request;
-        }
-
-        public Task<byte[]> GetResponseContentAsByteArray(HttpResponseMessage responseMessage)
-        {
-            return responseMessage.Content.ReadAsByteArrayAsync();
-        }
-
-        public async Task<IRecaptchaResponseMessage> Execute()
+        public async Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage)
         {
             try 
-            { 
-                string recaptchaVerificationUrl = Request.ToString();
+            {
+                RecaptchaResponseMessage Response;
 
-                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null);
+                string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(requestMessage);
+
+                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null).ConfigureAwait(false);
                 
                 verificationResponse.EnsureSuccessStatusCode();
 
-                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync();
-
-                string logResponseData = await verificationResponse.Content.ReadAsStringAsync();
+                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
                 using (MemoryStream ms = new MemoryStream(responseData))
                 {
@@ -45,9 +36,9 @@ namespace RecaptchaValidation.Services
                     Response = (RecaptchaResponseMessage)serializer.ReadObject(ms);
                 }
                 
-                if (!Response.success)
+                if (!Response.Success)
                 {
-                    throw new RecaptchaRequestException();
+                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {string.Join(',', Response?.ErrorCodes)}");
                 }
                 return Response;
             }
@@ -55,49 +46,43 @@ namespace RecaptchaValidation.Services
             {
                 //Handle Logging Here...
                 Console.WriteLine(hre.ToString());
-                Response = new RecaptchaResponseMessage()
+                return new RecaptchaResponseMessage()
                 {
-                    success = false,
-                    challenge_ts = DateTime.UtcNow.ToString(),
-                    hostname = "localhost", 
-                    error_codes = new string[] { $"Error: Status Code {hre.StatusCode} | {hre.Message}" }
+                    Success = false,
+                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                    HostName = "localhost", 
+                    ErrorCodes = new string[] { $"Error: Status Code {hre.StatusCode} | {hre.Message}" }
                 };
-                return Response;
             }
             catch (RecaptchaRequestException ex)
             {
-
-                /*  Here are the possible "business" level codes:
-                    missing-input-secret    The secret parameter is missing.
-                    invalid-input-secret    The secret parameter is invalid or malformed.
-                    missing-input-response  The response parameter is missing.
-                    invalid-input-response  The response parameter is invalid or malformed.
-                    bad-request             The request is invalid or malformed.
-                    timeout-or-duplicate    The response is no longer valid: either is too old or has been used previously.
-                */
-
                 //Handle Logging Here...
                 Console.WriteLine(ex.ToString());
-                return Response;
+                return new RecaptchaResponseMessage()
+                {
+                    Success = false,
+                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                    HostName = ex.Source,
+                    ErrorCodes = new string[]
+                        {
+                            $"Error: {ex.Message}"
+                        }
+                };
             }
             catch (Exception ex)
             {
                 //Handle Logging Here...
                 Console.WriteLine(ex.ToString());
-                if (Response == null)
+                return new RecaptchaResponseMessage()
                 {
-                    Response = new RecaptchaResponseMessage()
-                    {
-                        success = false,
-                        challenge_ts = DateTime.UtcNow.ToString(),
-                        hostname = ex.Source,
-                        error_codes = new string[]
+                    Success = false,
+                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                    HostName = ex.Source,
+                    ErrorCodes = new string[]
                         {
                             $"Error: {ex.Message} | {ex.StackTrace}"
                         }
-                    };
-                }
-                return Response;
+                };
             }
         }
     }
