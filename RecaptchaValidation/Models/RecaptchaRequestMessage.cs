@@ -19,9 +19,10 @@ namespace RecaptchaValidation.Models
             remoteip = remoteIPAddress;
         }
 
-        public override string ToString()
+        public static string GetVerificationUrl(RecaptchaRequestMessage requestMessage)
         {
-            return $"{path}?{HttpUtility.UrlPathEncode($"secret={secret}&response={response}&remoteip={remoteip}")}";
+            return $"{requestMessage.path}?{HttpUtility.UrlPathEncode($"secret={requestMessage.secret}&response={requestMessage.response}&remoteip={requestMessage.remoteip}")}";
         }
+        
     }
 }

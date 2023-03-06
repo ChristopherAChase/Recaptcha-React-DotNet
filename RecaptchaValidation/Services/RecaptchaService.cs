@@ -33,7 +33,7 @@ namespace RecaptchaValidation.Services
         {
             try 
             { 
-                string recaptchaVerificationUrl = Request.ToString();
+                string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(Request);
 
                 HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null);
                 
