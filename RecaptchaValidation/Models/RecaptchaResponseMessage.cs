@@ -13,6 +13,10 @@ namespace RecaptchaValidation.Models
     {
         [DataMember]
         public bool success { get; set; }
+        [DataMember] 
+        public decimal score { get; set; }
+        [DataMember] 
+        public string action { get; set; }
         [DataMember]
         public string challenge_ts { get; set; }
         [DataMember]
