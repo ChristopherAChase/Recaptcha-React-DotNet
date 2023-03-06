@@ -5,7 +5,7 @@ using System.Runtime.Serialization.Json;
 
 namespace RecaptchaValidation.Services
 {
-    public class RecaptchaService : IRecaptchaService
+    internal sealed class RecaptchaService : IRecaptchaService
     {
         public HttpClient _httpClient { get; set; }
         public IRecaptchaRequestMessage Request {get; set; }
