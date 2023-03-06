@@ -1,6 +1,7 @@
 ﻿namespace RecaptchaValidation.Models
 {
-    public class RecaptchaRequestException : Exception 
+    // Add the comment giving context to the exception here instead of the Service.
+    public sealed class RecaptchaRequestException : Exception 
     {
         public RecaptchaRequestException()
         {
