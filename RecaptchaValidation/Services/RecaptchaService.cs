@@ -30,7 +30,7 @@ namespace RecaptchaValidation.Services
 
                 string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(requestMessage);
 
-                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null);
+                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null).ConfigureAwait(false);
                 
                 verificationResponse.EnsureSuccessStatusCode();
 
