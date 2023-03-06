@@ -21,10 +21,10 @@ namespace RecaptchaValidation.Controllers
             _recaptcha = recaptcha;
         }
 
-        [HttpPost("Verify")]
-        public async Task<IActionResult> Verify([FromQuery] string RecaptchaToken)
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify([FromQuery] string recaptchaToken)
         {
-            var request = new RecaptchaRequestMessage(RecaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config.Value.Keys.Secret, _config.Value.VerifyUrl);
+            var request = new RecaptchaRequestMessage(recaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config.Value.Keys.Secret, _config.Value.VerifyUrl);
 
             RecaptchaResponseMessage response = await _recaptcha.Execute(request);
 
