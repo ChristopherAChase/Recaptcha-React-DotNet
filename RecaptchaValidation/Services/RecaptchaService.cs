@@ -12,7 +12,6 @@ namespace RecaptchaValidation.Services
     public class RecaptchaService : IRecaptchaService
     {
         public HttpClient _httpClient { get; set; }
-        public RecaptchaResponseMessage Response { get; set; }
 
         public RecaptchaService(HttpClient httpClient, IOptions<RecaptchaOptions> recaptchaOptions) {
             _httpClient= httpClient;
@@ -26,7 +25,9 @@ namespace RecaptchaValidation.Services
         public async Task<RecaptchaResponseMessage> Execute(RecaptchaRequestMessage requestMessage)
         {
             try 
-            { 
+            {
+                RecaptchaResponseMessage Response;
+
                 string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(requestMessage);
 
                 HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null);
@@ -34,8 +35,6 @@ namespace RecaptchaValidation.Services
                 verificationResponse.EnsureSuccessStatusCode();
 
                 byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync();
-
-                string logResponseData = await verificationResponse.Content.ReadAsStringAsync();
 
                 using (MemoryStream ms = new MemoryStream(responseData))
                 {
@@ -45,7 +44,7 @@ namespace RecaptchaValidation.Services
                 
                 if (!Response.success)
                 {
-                    throw new RecaptchaRequestException();
+                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {Response.error_codes}");
                 }
                 return Response;
             }
@@ -53,49 +52,43 @@ namespace RecaptchaValidation.Services
             {
                 //Handle Logging Here...
                 Console.WriteLine(hre.ToString());
-                Response = new RecaptchaResponseMessage()
+                return new RecaptchaResponseMessage()
                 {
                     success = false,
                     challenge_ts = DateTime.UtcNow.ToString(),
                     hostname = "localhost", 
                     error_codes = new string[] { $"Error: Status Code {hre.StatusCode} | {hre.Message}" }
                 };
-                return Response;
             }
             catch (RecaptchaRequestException ex)
             {
-
-                /*  Here are the possible "business" level codes:
-                    missing-input-secret    The secret parameter is missing.
-                    invalid-input-secret    The secret parameter is invalid or malformed.
-                    missing-input-response  The response parameter is missing.
-                    invalid-input-response  The response parameter is invalid or malformed.
-                    bad-request             The request is invalid or malformed.
-                    timeout-or-duplicate    The response is no longer valid: either is too old or has been used previously.
-                */
-
                 //Handle Logging Here...
                 Console.WriteLine(ex.ToString());
-                return Response;
+                return new RecaptchaResponseMessage()
+                {
+                    success = false,
+                    challenge_ts = DateTime.UtcNow.ToString(),
+                    hostname = ex.Source,
+                    error_codes = new string[]
+                        {
+                            $"Error: {ex.Message} | {ex.StackTrace}"
+                        }
+                };
             }
             catch (Exception ex)
             {
                 //Handle Logging Here...
                 Console.WriteLine(ex.ToString());
-                if (Response == null)
+                return new RecaptchaResponseMessage()
                 {
-                    Response = new RecaptchaResponseMessage()
-                    {
-                        success = false,
-                        challenge_ts = DateTime.UtcNow.ToString(),
-                        hostname = ex.Source,
-                        error_codes = new string[]
+                    success = false,
+                    challenge_ts = DateTime.UtcNow.ToString(),
+                    hostname = ex.Source,
+                    error_codes = new string[]
                         {
                             $"Error: {ex.Message} | {ex.StackTrace}"
                         }
-                    };
-                }
-                return Response;
+                };
             }
         }
     }

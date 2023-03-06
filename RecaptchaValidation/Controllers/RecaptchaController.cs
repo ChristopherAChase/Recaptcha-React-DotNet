@@ -30,11 +30,11 @@ namespace RecaptchaValidation.Controllers
 
             if(!response.success)
             {
-                Console.WriteLine(_recaptcha.Response);
-                return Ok(_recaptcha.Response);
+                Console.WriteLine(response);
+                return Ok(response);
             }
             
-            return Ok($"Controller received token! { JsonSerializer.Serialize(_recaptcha.Response)}");
+            return Ok($"Controller received token! { JsonSerializer.Serialize(response)}");
         }
 
     }
