@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
 using RecaptchaValidation.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var AllowAllOriginsCorsPolicy = "_AllowAllOriginsCorsPolicy";
+const string AllowAllOriginsCorsPolicy = "_AllowAllOriginsCorsPolicy";
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -18,7 +21,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient<IRecaptchaService, RecaptchaService>();
-builder.Services.AddTransient<IRecaptchaService, RecaptchaService>();
 builder.Services.Configure<RecaptchaOptions>(
     builder.Configuration.GetSection(RecaptchaOptions.RecaptchaV3));
 
