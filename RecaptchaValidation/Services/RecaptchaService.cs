@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using RecaptchaValidation.Interfaces;
+﻿using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
 using System;
 using System.IO;
@@ -34,7 +33,7 @@ namespace RecaptchaValidation.Services
                 
                 verificationResponse.EnsureSuccessStatusCode();
 
-                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync();
+                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
                 using (MemoryStream ms = new MemoryStream(responseData))
                 {
@@ -44,7 +43,7 @@ namespace RecaptchaValidation.Services
                 
                 if (!Response.success)
                 {
-                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {Response.error_codes}");
+                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {string.Join(',', Response.error_codes)}");
                 }
                 return Response;
             }
@@ -71,7 +70,7 @@ namespace RecaptchaValidation.Services
                     hostname = ex.Source,
                     error_codes = new string[]
                         {
-                            $"Error: {ex.Message} | {ex.StackTrace}"
+                            $"Error: {ex.Message}"
                         }
                 };
             }
