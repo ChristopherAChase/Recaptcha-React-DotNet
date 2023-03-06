@@ -26,7 +26,7 @@ namespace RecaptchaValidation.Controllers
         {
             var request = new RecaptchaRequestMessage(recaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config.Value.Keys.Secret, _config.Value.VerifyUrl);
 
-            RecaptchaResponseMessage response = await _recaptcha.Execute(request);
+            RecaptchaResponseMessage response = await _recaptcha.ExecuteAsync(request);
 
             if(!response.success)
             {

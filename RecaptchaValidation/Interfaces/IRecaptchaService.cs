@@ -5,6 +5,6 @@ namespace RecaptchaValidation.Interfaces
 {
     public interface IRecaptchaService
     {
-        Task<RecaptchaResponseMessage> Execute(RecaptchaRequestMessage requestMessage);
+        Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage);
     }
 }

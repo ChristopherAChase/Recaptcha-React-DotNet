@@ -21,7 +21,7 @@ namespace RecaptchaValidation.Services
             return responseMessage.Content.ReadAsByteArrayAsync();
         }
 
-        public async Task<RecaptchaResponseMessage> Execute(RecaptchaRequestMessage requestMessage)
+        public async Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage)
         {
             try 
             {
