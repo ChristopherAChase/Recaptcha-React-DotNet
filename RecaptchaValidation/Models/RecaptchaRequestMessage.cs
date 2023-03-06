@@ -4,7 +4,7 @@ using System.Web;
 
 namespace RecaptchaValidation.Models
 {
-    public class RecaptchaRequestMessage : IRecaptchaRequestMessage
+    public class RecaptchaRequestMessage
     {
         public string path { get; private set; }
         public string secret { get; private set; }

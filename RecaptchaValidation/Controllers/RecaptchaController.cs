@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
+using System;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace RecaptchaValidation.Controllers
 {
@@ -22,11 +24,11 @@ namespace RecaptchaValidation.Controllers
         [HttpPost("Verify")]
         public async Task<IActionResult> Verify([FromQuery] string RecaptchaToken)
         {
-            IRecaptchaRequestMessage request = new RecaptchaRequestMessage(RecaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config);
+            RecaptchaRequestMessage request = new RecaptchaRequestMessage(RecaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config);
 
             _recaptcha.InitializeRequest(request);
 
-            IRecaptchaResponseMessage response = await _recaptcha.Execute();
+            RecaptchaResponseMessage response = await _recaptcha.Execute();
 
             if(!response.success)
             {

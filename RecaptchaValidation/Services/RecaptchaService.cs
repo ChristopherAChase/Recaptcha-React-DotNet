@@ -1,21 +1,25 @@
 ﻿using Microsoft.Extensions.Options;
 using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
+using System;
+using System.IO;
+using System.Net.Http;
 using System.Runtime.Serialization.Json;
+using System.Threading.Tasks;
 
 namespace RecaptchaValidation.Services
 {
     public class RecaptchaService : IRecaptchaService
     {
         public HttpClient _httpClient { get; set; }
-        public IRecaptchaRequestMessage Request {get; set; }
-        public IRecaptchaResponseMessage Response { get; set; }
+        public RecaptchaRequestMessage Request {get; set; }
+        public RecaptchaResponseMessage Response { get; set; }
 
         public RecaptchaService(HttpClient httpClient, IOptions<RecaptchaOptions> recaptchaOptions) {
             _httpClient= httpClient;
         }
 
-        public void InitializeRequest(IRecaptchaRequestMessage request)
+        public void InitializeRequest(RecaptchaRequestMessage request)
         {
             Request = request;
         }
@@ -25,7 +29,7 @@ namespace RecaptchaValidation.Services
             return responseMessage.Content.ReadAsByteArrayAsync();
         }
 
-        public async Task<IRecaptchaResponseMessage> Execute()
+        public async Task<RecaptchaResponseMessage> Execute()
         {
             try 
             { 

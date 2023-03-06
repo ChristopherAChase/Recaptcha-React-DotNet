@@ -1,4 +1,6 @@
-﻿namespace RecaptchaValidation.Models
+﻿using System;
+
+namespace RecaptchaValidation.Models
 {
     public class RecaptchaRequestException : Exception 
     {
