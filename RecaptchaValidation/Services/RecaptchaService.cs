@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
 using System.Runtime.Serialization.Json;
@@ -11,33 +11,59 @@ namespace RecaptchaValidation.Services
         public IRecaptchaRequestMessage Request {get; set; }
         public IRecaptchaResponseMessage Response { get; set; }
 
+        // The AddHttpClient in the composition root is for using a class to wrap an HttpClient with a bunch of pre-configured settings such as:
+        //  - BaseAddress
+        //  - Headers
+        //  - TimeOut
+        //  - Retry
+        // You aren't doing that here, you just want the HTTP client to use by default.
+        // If you wanted a special class to use as an HttpClient, you'd create a RecaptchaHttpClient class that
+        // takes in an HttpClient and configures that stuff in the constructor. Then in this class you'd pull in the
+        // RecaptchaHttpClient and use it _instead_ of the HttpClient you have currently. -z
         public RecaptchaService(HttpClient httpClient, IOptions<RecaptchaOptions> recaptchaOptions) {
             _httpClient= httpClient;
         }
 
+        // Get rid of this method. You are intentionally mutating the class rather than just pass the RecaptchaRequestMessage to the 
+        // Execute function where it is needed.
+        // All this method does is allow someone to forget to call it, and then you call Execute and get a NullReferenceException.
+        // Bad bad bad bad bad bad. -z
         public void InitializeRequest(IRecaptchaRequestMessage request)
         {
             Request = request;
         }
 
+        // This member is set to _public_ but it doesn't exist on the interface.
+        // That means the only time that the rest of the code is able to call this is if this class is used AS the RecaptchaService implementation
+        // and NOT the interface. This does not occur in this code base.
+        // This should be a private method or a local method if it needs to exist at all. -z
         public Task<byte[]> GetResponseContentAsByteArray(HttpResponseMessage responseMessage)
         {
             return responseMessage.Content.ReadAsByteArrayAsync();
         }
 
-        public async Task<IRecaptchaResponseMessage> Execute()
+        // This needs to take in the request as a method parameter.
+        public async Task<IRecaptchaResponseMessage> Execute(RecaptchaRequestMessage request)
         {
             try 
             { 
-                string recaptchaVerificationUrl = Request.ToString();
+                // ToString() and GetVerificationUrl() are different. ToString() is intended to be a representation of that full object.
+                // In this case, because it is a data transfer object, I would expect to call ToString() and get information on all public members.
+                // Create an extension method or a static method to get this data instead.
+                string recaptchaVerificationUrl = request.ToString();
 
-                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null);
+                // Asynchronous calls are handled by default in ASP.NET Core to not care about the synchronization context in which they were called.
+                // All Controllers have this built in by default.
+                // This is not always the case. 
+                // And since this Service does not know about where it is called from, it is best practice to append .ConfigureAwait(false) to all
+                // asynchronous calls.
+                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null).ConfigureAwait(false);
                 
                 verificationResponse.EnsureSuccessStatusCode();
 
-                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync();
+                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
-                string logResponseData = await verificationResponse.Content.ReadAsStringAsync();
+                string logResponseData = await verificationResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 using (MemoryStream ms = new MemoryStream(responseData))
                 {
@@ -45,10 +71,13 @@ namespace RecaptchaValidation.Services
                     Response = (RecaptchaResponseMessage)serializer.ReadObject(ms);
                 }
                 
+                // This is already done by EnsureSuccessStatusCode above.
                 if (!Response.success)
                 {
                     throw new RecaptchaRequestException();
                 }
+                
+                // No need for the weird mutation of the Response property. Just return the damn thing here. -z
                 return Response;
             }
             catch (HttpRequestException hre)
@@ -66,7 +95,8 @@ namespace RecaptchaValidation.Services
             }
             catch (RecaptchaRequestException ex)
             {
-
+                // This comment/code can exist in the RecaptchaRequestException file.
+                // This file doesn't care about teaching the user about the RecaptchaRequestException. -z
                 /*  Here are the possible "business" level codes:
                     missing-input-secret    The secret parameter is missing.
                     invalid-input-secret    The secret parameter is invalid or malformed.
