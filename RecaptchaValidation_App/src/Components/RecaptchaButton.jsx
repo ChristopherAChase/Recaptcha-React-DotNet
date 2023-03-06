@@ -3,7 +3,7 @@ import fromUTF8Array from "../Utilities/UTF8ArrayConverter";
 
 const RecaptchaButton = ({formId}) => {
   let grecaptcha = window.grecaptcha;
-  const SITE_KEY = '6LcSadEkAAAAAHB4_1lNEGWSAJxV1kNiq4ZZsFzJ'; 
+  const SITE_KEY = '6LcSadEkAAAAAHB4_1lNEGWSAJxV1kNiq4ZZsFzJ';
 
   const onRecaptchaSubmit = (event) => {
     event.preventDefault();
@@ -13,44 +13,44 @@ const RecaptchaButton = ({formId}) => {
         .then((token) => {
           console.log(`Googles response token: ${token}`);
           verifyRecaptchaToken(token)
-        }, 
+        },
         (reason) => {
           console.error(reason);
           grecaptcha.reset()
         });
-        
+
   }
 
   const createRecaptchaVerifyUrl = (recaptchaToken) => {
-    
+
     let recaptchaVerifyUrlParameters = new URLSearchParams([...new FormData(document.getElementById(formId)).entries()])
-    recaptchaVerifyUrlParameters.append('RecaptchaToken', recaptchaToken)
-    
-    return new URL(`https://localhost:7192/api/Recaptcha/Verify?${recaptchaVerifyUrlParameters}`);
+    recaptchaVerifyUrlParameters.append('recaptchaToken', recaptchaToken)
+
+    return new URL(`https://localhost:7192/api/Recaptcha/verify?${recaptchaVerifyUrlParameters}`);
   }
 
   async function verifyRecaptchaToken(recaptchaToken){
     console.log("Sending token to backend");
-    
+
     const recaptchaVerifyUrl = createRecaptchaVerifyUrl(recaptchaToken);
-    
+
     fetch(recaptchaVerifyUrl, {
-      method: "POST", 
+      method: "POST",
       body: recaptchaVerifyUrl.searchParams,
     }).then((response) => {
       if(!response.ok) {
-        const errorBuild = { 
-          type: "Error", 
-          message: response.message || "something went wrong", 
-          data: response.data || "", 
+        const errorBuild = {
+          type: "Error",
+          message: response.message || "something went wrong",
+          data: response.data || "",
           code: response.code || ""
-        }; 
+        };
 
         console.log(`Error: ${JSON.stringify(response.body)}`);
-        return 
+        return
       }
 
-      response.body 
+      response.body
         .getReader()
         .read()
         .then(({done, value}) => {
@@ -63,12 +63,12 @@ const RecaptchaButton = ({formId}) => {
 
 
 
-  const onRecaptchaResponse = (token) => { 
+  const onRecaptchaResponse = (token) => {
     console.log(`Recaptcha has been submitted! Token: ${token}`);
   }
 
   return (
-    <button 
+    <button
       onClick={onRecaptchaSubmit}
     >
       Submit
