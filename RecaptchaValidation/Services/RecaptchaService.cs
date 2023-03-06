@@ -12,16 +12,10 @@ namespace RecaptchaValidation.Services
     public class RecaptchaService : IRecaptchaService
     {
         public HttpClient _httpClient { get; set; }
-        public RecaptchaRequestMessage Request {get; set; }
         public RecaptchaResponseMessage Response { get; set; }
 
         public RecaptchaService(HttpClient httpClient, IOptions<RecaptchaOptions> recaptchaOptions) {
             _httpClient= httpClient;
-        }
-
-        public void InitializeRequest(RecaptchaRequestMessage request)
-        {
-            Request = request;
         }
 
         public Task<byte[]> GetResponseContentAsByteArray(HttpResponseMessage responseMessage)
@@ -29,11 +23,11 @@ namespace RecaptchaValidation.Services
             return responseMessage.Content.ReadAsByteArrayAsync();
         }
 
-        public async Task<RecaptchaResponseMessage> Execute()
+        public async Task<RecaptchaResponseMessage> Execute(RecaptchaRequestMessage requestMessage)
         {
             try 
             { 
-                string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(Request);
+                string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(requestMessage);
 
                 HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null);
                 
