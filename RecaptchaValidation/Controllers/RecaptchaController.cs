@@ -24,7 +24,7 @@ namespace RecaptchaValidation.Controllers
         [HttpPost("Verify")]
         public async Task<IActionResult> Verify([FromQuery] string RecaptchaToken)
         {
-            RecaptchaRequestMessage request = new RecaptchaRequestMessage(RecaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config);
+            var request = new RecaptchaRequestMessage(RecaptchaToken, HttpContext.Connection.RemoteIpAddress.ToString(), _config.Value.Keys.Secret, _config.Value.VerifyUrl);
 
             _recaptcha.InitializeRequest(request);
 

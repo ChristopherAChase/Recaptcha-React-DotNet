@@ -11,12 +11,12 @@ namespace RecaptchaValidation.Models
         public string response { get; set; }
         public string remoteip { get; set; }
 
-        public RecaptchaRequestMessage(string _response, string _remoteIp, IOptions<RecaptchaOptions> _options)
+        public RecaptchaRequestMessage(string responseToken, string remoteIPAddress, string secretKey, string verifyUrl)
         {
-            path = _options.Value.VerifyUrl;
-            secret = _options.Value.Keys.Secret;
-            response = _response;
-            remoteip = _remoteIp;
+            path = verifyUrl;
+            secret = secretKey;
+            response = responseToken;
+            remoteip = remoteIPAddress;
         }
 
         public override string ToString()
