@@ -1,27 +1,29 @@
 ﻿using Microsoft.Extensions.Options;
 using RecaptchaValidation.Interfaces;
+using System.Runtime.Serialization;
 using System.Web;
 
 namespace RecaptchaValidation.Models
 {
+    [DataContract]
     public sealed class RecaptchaRequestMessage
     {
-        public string path { get; private set; }
-        public string secret { get; private set; }
-        public string response { get; set; }
-        public string remoteip { get; set; }
+        public string Path { get; private set; }
+        public string Secret { get; private set; }
+        public string Response { get; set; }
+        public string RemoteIp { get; set; }
 
         public RecaptchaRequestMessage(string responseToken, string remoteIPAddress, string secretKey, string verifyUrl)
         {
-            path = verifyUrl;
-            secret = secretKey;
-            response = responseToken;
-            remoteip = remoteIPAddress;
+            Path = verifyUrl;
+            Secret = secretKey;
+            Response = responseToken;
+            RemoteIp = remoteIPAddress;
         }
 
         public static string GetVerificationUrl(RecaptchaRequestMessage requestMessage)
         {
-            return $"{requestMessage.path}?{HttpUtility.UrlPathEncode($"secret={requestMessage.secret}&response={requestMessage.response}&remoteip={requestMessage.remoteip}")}";
+            return $"{requestMessage.Path}?{HttpUtility.UrlPathEncode($"secret={requestMessage.Secret}&response={requestMessage.Response}&remoteip={requestMessage.RemoteIp}")}";
         }
         
     }

@@ -16,11 +16,6 @@ namespace RecaptchaValidation.Services
             _httpClient= httpClient;
         }
 
-        public Task<byte[]> GetResponseContentAsByteArray(HttpResponseMessage responseMessage)
-        {
-            return responseMessage.Content.ReadAsByteArrayAsync();
-        }
-
         public async Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage)
         {
             try 
@@ -41,9 +36,9 @@ namespace RecaptchaValidation.Services
                     Response = (RecaptchaResponseMessage)serializer.ReadObject(ms);
                 }
                 
-                if (!Response.success)
+                if (!Response.Success)
                 {
-                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {string.Join(',', Response.error_codes)}");
+                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {string.Join(',', Response?.ErrorCodes)}");
                 }
                 return Response;
             }
@@ -53,10 +48,10 @@ namespace RecaptchaValidation.Services
                 Console.WriteLine(hre.ToString());
                 return new RecaptchaResponseMessage()
                 {
-                    success = false,
-                    challenge_ts = DateTime.UtcNow.ToString(),
-                    hostname = "localhost", 
-                    error_codes = new string[] { $"Error: Status Code {hre.StatusCode} | {hre.Message}" }
+                    Success = false,
+                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                    HostName = "localhost", 
+                    ErrorCodes = new string[] { $"Error: Status Code {hre.StatusCode} | {hre.Message}" }
                 };
             }
             catch (RecaptchaRequestException ex)
@@ -65,10 +60,10 @@ namespace RecaptchaValidation.Services
                 Console.WriteLine(ex.ToString());
                 return new RecaptchaResponseMessage()
                 {
-                    success = false,
-                    challenge_ts = DateTime.UtcNow.ToString(),
-                    hostname = ex.Source,
-                    error_codes = new string[]
+                    Success = false,
+                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                    HostName = ex.Source,
+                    ErrorCodes = new string[]
                         {
                             $"Error: {ex.Message}"
                         }
@@ -80,10 +75,10 @@ namespace RecaptchaValidation.Services
                 Console.WriteLine(ex.ToString());
                 return new RecaptchaResponseMessage()
                 {
-                    success = false,
-                    challenge_ts = DateTime.UtcNow.ToString(),
-                    hostname = ex.Source,
-                    error_codes = new string[]
+                    Success = false,
+                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                    HostName = ex.Source,
+                    ErrorCodes = new string[]
                         {
                             $"Error: {ex.Message} | {ex.StackTrace}"
                         }

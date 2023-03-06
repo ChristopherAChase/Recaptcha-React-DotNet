@@ -28,7 +28,7 @@ namespace RecaptchaValidation.Controllers
 
             RecaptchaResponseMessage response = await _recaptcha.ExecuteAsync(request);
 
-            if(!response.success)
+            if(!response.Success)
             {
                 Console.WriteLine(response);
                 return Ok(response);

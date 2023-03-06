@@ -11,18 +11,18 @@ namespace RecaptchaValidation.Models
     [DataContract]
     public sealed class RecaptchaResponseMessage
     {
-        [DataMember]
-        public bool success { get; set; }
-        [DataMember] 
-        public decimal score { get; set; }
-        [DataMember] 
-        public string action { get; set; }
-        [DataMember]
-        public string challenge_ts { get; set; }
-        [DataMember]
-        public string hostname { get; set; }
+        [DataMember(Name ="success")]
+        public bool Success { get; set; }
+        [DataMember(Name ="score")] 
+        public decimal Score { get; set; }
+        [DataMember(Name ="action")] 
+        public string Action { get; set; }
+        [DataMember(Name ="challenge_ts")]
+        public string ChallengeTimestamp { get; set; }
+        [DataMember(Name ="hostname")]
+        public string HostName { get; set; }
         [DataMember(Name ="error-codes")]
-        public string[] error_codes { get; set; }
+        public string[] ErrorCodes { get; set; }
 
     }
 }
