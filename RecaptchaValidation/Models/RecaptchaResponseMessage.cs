@@ -9,7 +9,7 @@ namespace RecaptchaValidation.Models
      * with mapping or anything like that. 
      */
     [DataContract]
-    public class RecaptchaResponseMessage
+    public sealed class RecaptchaResponseMessage
     {
         [DataMember]
         public bool success { get; set; }
