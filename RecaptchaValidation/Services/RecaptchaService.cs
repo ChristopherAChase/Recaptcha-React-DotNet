@@ -13,7 +13,7 @@ namespace RecaptchaValidation.Services
     {
         public HttpClient _httpClient { get; set; }
 
-        public RecaptchaService(HttpClient httpClient, IOptions<RecaptchaOptions> recaptchaOptions) {
+        public RecaptchaService(HttpClient httpClient) {
             _httpClient= httpClient;
         }
 
