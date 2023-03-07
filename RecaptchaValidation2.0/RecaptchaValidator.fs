@@ -19,5 +19,7 @@ let validateRecaptcha: (unit -> DateTimeOffset) -> HttpClient -> ValidateRecaptc
             |> Task.bind (JsonSerializer.DeserializeAsync<RecaptchaResponseMessage> >> asTask)
             |> Async.AwaitTask
 
-        return responseMessage
+        let now = getNow() |> string
+
+        return { responseMessage with ChallengeTimestamp = now }
     }
