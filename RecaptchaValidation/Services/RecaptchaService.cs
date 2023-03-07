@@ -1,89 +1,85 @@
 ﻿using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Runtime.Serialization.Json;
-using System.Threading.Tasks;
+using System.Text.Json;
 
-namespace RecaptchaValidation.Services
+namespace RecaptchaValidation.Services;
+
+internal sealed class RecaptchaService : IRecaptchaService
 {
-    public class RecaptchaService : IRecaptchaService
+    public HttpClient _httpClient { get; set; }
+
+    public RecaptchaService(HttpClient httpClient) {
+        _httpClient= httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+    }
+
+    public async Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage)
     {
-        public HttpClient _httpClient { get; set; }
-
-        public RecaptchaService(HttpClient httpClient) {
-            _httpClient= httpClient;
-        }
-
-        public async Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage)
+        try 
         {
-            try 
+            var recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(requestMessage);
+
+            var verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null).ConfigureAwait(false);
+            
+            verificationResponse.EnsureSuccessStatusCode();
+
+            var responseData = await verificationResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+
+            using var stream = await verificationResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            var result = await JsonSerializer.DeserializeAsync<RecaptchaResponseMessage>(stream).ConfigureAwait(false);
+
+            if (result is null)
             {
-                RecaptchaResponseMessage Response;
+                throw new RecaptchaRequestException($"The resulting {nameof(RecaptchaResponseMessage)} was found to be null.");
+            }
 
-                string recaptchaVerificationUrl = RecaptchaRequestMessage.GetVerificationUrl(requestMessage);
+            if (!result.Success)
+            {
+                throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {string.Join(',', result.ErrorCodes)}");
+            }
 
-                HttpResponseMessage verificationResponse = await _httpClient.PostAsync(recaptchaVerificationUrl, null).ConfigureAwait(false);
-                
-                verificationResponse.EnsureSuccessStatusCode();
-
-                byte[] responseData = await verificationResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-
-                using (MemoryStream ms = new MemoryStream(responseData))
+            return result;
+        }
+        catch (HttpRequestException exn)
+        {
+            //Handle Logging Here...
+            Console.WriteLine(exn.ToString());
+            return new RecaptchaResponseMessage()
+            {
+                Success = false,
+                ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                HostName = "localhost", 
+                ErrorCodes = new string[] { $"Error: Status Code {exn.StatusCode} | {exn.Message}" }
+            };
+        }
+        catch (RecaptchaRequestException exn)
+        {
+            //Handle Logging Here...
+            Console.WriteLine(exn.ToString());
+            return new RecaptchaResponseMessage()
+            {
+                Success = false,
+                ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                HostName = exn?.Source ?? "No host name provided.",
+                ErrorCodes = new string[]
                 {
-                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(RecaptchaResponseMessage));
-                    Response = (RecaptchaResponseMessage)serializer.ReadObject(ms);
+                    $"Error: {exn?.Message ?? "No message provided."}"
                 }
-                
-                if (!Response.Success)
+            };
+        }
+        catch (Exception exn)
+        {
+            //Handle Logging Here...
+            Console.WriteLine(exn.ToString());
+            return new RecaptchaResponseMessage()
+            {
+                Success = false,
+                ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
+                HostName = exn?.Source ?? "No host name provided.",
+                ErrorCodes = new string[]
                 {
-                    throw new RecaptchaRequestException($"Errors returned from Recaptcha Verification URL: {string.Join(',', Response?.ErrorCodes)}");
+                    $"Error: {exn ?.Message ?? "No message provided." } | {exn?.StackTrace ?? "No stack trace provided."}"
                 }
-                return Response;
-            }
-            catch (HttpRequestException hre)
-            {
-                //Handle Logging Here...
-                Console.WriteLine(hre.ToString());
-                return new RecaptchaResponseMessage()
-                {
-                    Success = false,
-                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
-                    HostName = "localhost", 
-                    ErrorCodes = new string[] { $"Error: Status Code {hre.StatusCode} | {hre.Message}" }
-                };
-            }
-            catch (RecaptchaRequestException ex)
-            {
-                //Handle Logging Here...
-                Console.WriteLine(ex.ToString());
-                return new RecaptchaResponseMessage()
-                {
-                    Success = false,
-                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
-                    HostName = ex.Source,
-                    ErrorCodes = new string[]
-                        {
-                            $"Error: {ex.Message}"
-                        }
-                };
-            }
-            catch (Exception ex)
-            {
-                //Handle Logging Here...
-                Console.WriteLine(ex.ToString());
-                return new RecaptchaResponseMessage()
-                {
-                    Success = false,
-                    ChallengeTimestamp = DateTimeOffset.UtcNow.ToString(),
-                    HostName = ex.Source,
-                    ErrorCodes = new string[]
-                        {
-                            $"Error: {ex.Message} | {ex.StackTrace}"
-                        }
-                };
-            }
+            };
         }
     }
 }

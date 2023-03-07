@@ -1,32 +1,27 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using RecaptchaValidation;
+using RecaptchaValidation.Extensions;
 using RecaptchaValidation.Interfaces;
 using RecaptchaValidation.Models;
 using RecaptchaValidation.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-const string AllowAllOriginsCorsPolicy = "_AllowAllOriginsCorsPolicy";
+
 // Add services to the container.
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: AllowAllOriginsCorsPolicy,
-        policy =>
-        {
-            policy.AllowAnyOrigin();
-        });
-});
+builder.Services.AddAllowAllOriginsCorsPolicy();
+
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddHttpClient<IRecaptchaService, RecaptchaService>();
 builder.Services.Configure<RecaptchaOptions>(
     builder.Configuration.GetSection(RecaptchaOptions.RecaptchaV3));
 
 var app = builder.Build();
-app.UseCors(AllowAllOriginsCorsPolicy);
 
+app.UseCors(Resources.AllowAllOriginsCorsPolicy);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
