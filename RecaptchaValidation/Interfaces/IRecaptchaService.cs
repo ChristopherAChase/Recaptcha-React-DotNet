@@ -1,10 +1,8 @@
-﻿using System.Threading.Tasks;
-using RecaptchaValidation.Models;
+﻿using RecaptchaValidation.Models;
 
-namespace RecaptchaValidation.Interfaces
+namespace RecaptchaValidation.Interfaces;
+
+public interface IRecaptchaService
 {
-    public interface IRecaptchaService
-    {
-        Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage);
-    }
+    Task<RecaptchaResponseMessage> ExecuteAsync(RecaptchaRequestMessage requestMessage);
 }
